@@ -289,7 +289,7 @@ class VendaItemDAO:
         if isinstance(venda, Venda):
             self.listavendaItem.append(venda)
         else:
-            print("\nNAO EH UMA VENDA VALIDA\n")
+            print("NAO EH UMA VENDA VALIDA")
 
     def mostrar_vendas(self):
         if len(self.listavendaItem) > 0:
@@ -315,7 +315,7 @@ class VendaItemDAO:
                 if id == venda.get_idvenda():
                     self.listavendaItem.remove(venda)
                 else:
-                    print("Nao tem vendas com este ID")
+                    raise ValueError("Nao tem vendas com este ID")
 
         else:
             print("\nNENHUM id ITEM VENDA CADASTRADO\n")
@@ -336,17 +336,216 @@ class VendaItemDAO:
         else:
             print("\nNENHUM ITEM VENDA CADASTRADO\n")
 
+class ProdutoDao:
+    def __init__(self):
+        self.__listaproduto = []
+
+    def atualizar_produto(self, produto):
+        if isinstance(produto, Produto):
+            self.__listaproduto.append(produto)
+        else:
+            raise ValueError("Não é um produto válido")
+        
+    def mostrar_produtos(self):
+        lista = []
+        if len(self.__listaproduto) > 0:
+            for produto in self.__listaproduto:
+                lista.append(produto.ToString())
+            return lista
+        else:
+            raise ValueError("Não tem produtos na lista")
+        
+    def mostrar_produtosID(self):
+        lista = []
+        if len(self.__listaproduto) > 0:
+            for produto in self.__listaproduto:
+                lista.append(produto.get_id())
+            return lista
+        else:
+            raise ValueError("Não tem produtos na lista")
+        
+    def excluir_produto(self):
+        if len(self.__listaproduto) > 0:
+            id = input("Digite o ID para excluir o produto: ")
+            for produto in self.__listaproduto:
+                if id == produto.get_id():
+                    self.__listaproduto.remove(produto)
+                    break
+                else:
+                    print("Nenhum produto encontrado com esse ID")
+        else:
+            raise ValueError("A lista não tem produtos")
+        
+    def atualizar_produto(self):
+        if len(self.__listaproduto) > 0:
+            id = input("Digite o ID do produto que voce quer atualizar: ")
+            for produto in self.__listaproduto:
+                if id == produto.get_id():
+                    descricao = input("Digite a descricao nova: ")
+                    produto.set_descricao(descricao)
+                    preco = input("Digite o novo preco: ")
+                    produto.set_preco(preco)
+                    estoque = input("Digite o novo estoque: ")
+                    produto.set_estoque(estoque)
+                    idcategoria = input("Digite o novo ID da categoria: ")
+                    produto.set_idcategoria(idcategoria)
+                    break
+                else:
+                    print("Nenhum produto encontrado com esse ID")
+        else:
+            raise ValueError("A lista não tem produtos")
+
+class CategoriaDAO:
+    def __init__(self):
+        self.__listacategoria = []
+
+    def adicionar_categoria(self, categoria):
+        if isinstance(categoria, Categoria):
+            self.__listacategoria.append(categoria)
+        else:
+            raise ValueError("Não é uma categoria válida")
+    
+    def mostrar_categoria(self):
+        lista = []
+        if len(self.__listaproduto) > 0:
+            for categoria in self.__listacategoria:
+                lista.append(categoria.ToString())
+            return lista
+        else:
+            raise ValueError("Não tem categorias na lista")
+
+    def mostrar_categoriaID(self):
+        lista = []
+        if len(self.__listacategoria) > 0:
+            for categoria in self.__listacategoria:
+                lista.append(categoria.get_id())
+            return lista
+        else:
+            raise ValueError("Não tem categoria na lista")
+
+    def excluir_categoria(self):
+        if len(self.__listacategoria) > 0:
+            id = input("Digite o ID para excluir a categoria: ")
+            for categoria in self.__listacategoria:
+                if id == categoria.get_id():
+                    self.__listacategoria.remove(categoria)
+                    break
+                else:
+                    print("Nenhuma categoria encontrada com esse ID")
+        else:
+            raise ValueError("A lista não tem categorias")
+
+    def atualizar_categoria(self):
+        if len(self.__listacategoria) > 0:
+            id = input("Digite o ID do produto que voce quer atualizar: ")
+            for categoria in self.__listacategoria:
+                if id == categoria.get_id():
+                    categoria.set_categoria(categoria)
+                    break
+                else:
+                    print("Nenhuma categoria encontrado com esse ID")
+        else:
+            raise ValueError("A lista não tem categoria")
 
 
+class UI:
+    def __init__(self):
+        self.cliente_dao = ClienteDAO()
+        self.venda_dao = VendaDAO()
+        self.vendaitem_dao = VendaItemDAO()
+        self.produto_dao = ProdutoDao()
+        self.categoria_dao = CategoriaDAO()
 
+    def menu(self):
+        print("----------------------------")
+        print("1. CRUD Clientes")
+        print("2. CRUD Venda")
+        print("3. CRUD VendaItem")
+        print("4. CRUD Produtos")
+        print("5. CRUD Categoria")
+        print("6. Sair")
+        print("----------------------------\n")
+        return input("Escolha uma opção: ")
+    
+    def menu_cliente(self):
+        print("1 - Criar Cliente")
+        print("2 - Listar Cliente")
+        print("3 - Atualizar Cliente")
+        print("4 - Excluir Clientes")
+        print("5 - Sair")
+        return input("Digite o número da opçao: ")
+    
+    def menu_venda(self):
+        print("1 - Criar Venda")
+        print("2 - Listar Venda")
+        print("3 - Atualizar Venda")
+        print("4 - Excluir Vendas")
+        print("5 - Sair")
+        return input("Digite o número da opçao: ")
+    
+    def menu_vendaitem(self):
+        print("1 - Criar Item pra Venda")
+        print("2 - Listar Itens pra Venda")
+        print("3 - Atualizar Itens pra Venda")
+        print("4 - Excluir Itens pra Vendas")
+        print("5 - Sair")
+        return input("Digite o número da opçao: ")
 
+    def menu_produto(self):
+        print("1 - Criar Produto")
+        print("2 - Listar Produto")
+        print("3 - Atualizar Produto")
+        print("4 - Excluir Produtos")
+        print("5 - Sair")
+        return input("Digite o número da opçao: ")
+    
+    def menu_categoria(self):
+        print("1 - Criar Categoria")
+        print("2 - Listar Categoria")
+        print("3 - Atualizar Categoria")
+        print("4 - Excluir Categorias")
+        print("5 - Sair")
+        return input("Digite o número da opçao: ")
+    
+    def main(self):
+        while True:
+            opcao = self.menu()
+            if opcao == '1':
+                self.menu_cliente()
+            elif opcao == '2':
+                self.menu_venda()
+            elif opcao == '3':
+                self.menu_vendaitem()
+            elif opcao == '4':
+                self.menu_produto()
+            elif opcao == '5':
+                self.menu_categoria()
+            elif opcao == '6':
+                break
 
+    def criar_cliente(self):
+        id = input("Digite um ID pro cliente: ")
+        nome = input("Digite um nome pro cliente: ")
+        email = input("Digite um email pro cliente: ")
+        telefone = input("Digite um telefone pro cliente: ")
 
+        cliente = Cliente(nome, telefone, email, id)
+        self.cliente_dao.adicionar_clientes(cliente)
 
-                    # id, qtd, preco, idvenda, idproduto
+    def mostrar_cliente(self):
+        self.cliente_dao.mostrar_clientes()
 
+    def mostrar_clienteID(self):
+        self.cliente_dao.mostrar_clientesID()
 
+    def atualizar_cliente(self):
+        self.cliente_dao.atualizar_cliente()
 
+    def excluir_cliente(self):
+        self.cliente_dao.excluir_cliente()
+
+if __name__ == "__main__":
+    UI().main()
 
 
 
