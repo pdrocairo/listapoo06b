@@ -1,4 +1,5 @@
 import os
+import json
 from datetime import datetime
 
 
@@ -37,11 +38,12 @@ class Cliente:
         return f"ID: {self.get_id()}, NOME: {self.get_nome()}, TELEFONE: {self.get_telefone()}, EMAIL: {self.get_email()}"
 
 class Venda:
-    def __init__(self, id, data, carrinho, total):
+    def __init__(self, id, data, carrinho, total, idCliente):
         self.__id = id
         self.__data = data
         self.__total = total
         self.__carrinho = carrinho
+        self.__idCliente = idCliente
     
     def set_idvenda(self, id):
         self.__id = id
@@ -54,6 +56,12 @@ class Venda:
 
     def set_total(self, total):
         self.__total = total
+        
+    def set_idCliente(self, idCliente):
+        self.__idCliente = idCliente
+
+    def get_idCliente(self):
+        return self.__idCliente
 
     def get_id(self):
         return self.__id
@@ -68,7 +76,7 @@ class Venda:
         return self.__total
     
     def ToString(self):
-        return f"ID DA VENDA: {self.get_idvenda()}, DATA: {self.get_data()}, CARRINHO: {self.get_carrinho()}, TOTAL: {self.set_total()}"
+        return f"ID DA VENDA: {self.get_id()}, ID DO CLIENTE: {self.get_idCliente()}, DATA: {self.get_data()}, CARRINHO: {self.get_carrinho()}, TOTAL: {self.get_total()}"
 
 class VendaItem:
     def __init__(self, id, qtd, preco, idvenda, idproduto):
@@ -150,7 +158,7 @@ class Produto:
         return self.__idcategoria
 
     def ToString(self):
-        return f"ID: {self.get_id()}, DESCRIÇAO: {self.get_descricao()}, PREÇO: {self.get_preco()}, ESTOQUE: , ID DA CATEGORIA: {self.get_idcategoria()}"
+        return f"ID: {self.get_id()}, DESCRIÇAO: {self.get_descricao()}, PREÇO: {self.get_preco()}, ESTOQUE: {self.get_estoque()}, ID DA CATEGORIA: {self.get_idcategoria()}"
     
 class Categoria:
     def __init__(self, id, categoria):
@@ -176,9 +184,37 @@ class ClienteDAO:
     def __init__(self):
         self.__listaclientes = []
 
+    def salvar_arquivo(self):
+        dados = []
+        for cliente in self.__listaclientes:
+            dados.append(
+                {
+                    "id": cliente.get_id(),
+                    "nome": cliente.get_nome(),
+                    "telefone": cliente.get_telefone(),
+                    "email": cliente.get_email(),
+                }
+            )
+
+        with open("clientes.json", "w", encoding="utf-8") as arquivo:
+            json.dump(dados, arquivo, ensure_ascii=False, indent=4)
+
+    def carregar_arquivo(self):
+        if not os.path.exists("clientes.json"):
+            return
+
+        with open("clientes.json", "r", encoding="utf-8") as arquivo:
+            dados = json.load(arquivo)
+
+        self.__listaclientes = []
+        for item in dados:
+            cliente = Cliente(item["nome"], item["telefone"], item["email"], item["id"])
+            self.__listaclientes.append(cliente)
+
     def adicionar_clientes(self, cliente):
         if isinstance(cliente, Cliente):
             self.__listaclientes.append(cliente)
+            self.salvar_arquivo()
 
     def mostrar_clientes(self):
         return self.__listaclientes
@@ -199,6 +235,7 @@ class ClienteDAO:
                 if id == cliente.get_id():
                     self.__listaclientes.remove(cliente)
                     print("Cliente removido com sucesso!")
+                    self.salvar_arquivo()
                     break
         else:
             return "Nao tem IDS NA LISTA"
@@ -218,6 +255,7 @@ class ClienteDAO:
                     cliente.set_email(email)
                     print("\nCliente atualizado com sucesso!")
                     print(cliente.ToString())
+                    self.salvar_arquivo()
                     break
             else:
                 print("\nCLIENTE NÃO ENCONTRADO\n")
@@ -228,9 +266,39 @@ class VendaDAO:
     def __init__(self):
         self.listavendas = []
 
+    def salvar_arquivo(self):
+        dados = []
+        for venda in self.listavendas:
+            dados.append(
+                {
+                    "id": venda.get_id(),
+                    "idCliente": venda.get_idCliente(),
+                    "data": venda.get_data(),
+                    "carrinho": venda.get_carrinho(),
+                    "total": venda.get_total(),
+                }
+            )
+
+        with open("vendas.json", "w", encoding="utf-8") as arquivo:
+            json.dump(dados, arquivo, ensure_ascii=False, indent=4)
+
+    def carregar_arquivo(self):
+        if not os.path.exists("vendas.json"):
+            return
+
+        with open("vendas.json", "r", encoding="utf-8") as arquivo:
+            dados = json.load(arquivo)
+
+        self.listavendas = []
+        for item in dados:
+            id_cliente = item.get("idCliente", "Desconhecido")
+            venda = Venda(item["id"], item["data"], item["carrinho"], item["total"], id_cliente)
+            self.listavendas.append(venda)
+
     def adicionar_venda(self, venda):
         if isinstance(venda, Venda):
             self.listavendas.append(venda)
+            self.salvar_arquivo()
         else:
             print("\nNENHUM VENDA CADASTRADO\n")
 
@@ -257,6 +325,7 @@ class VendaDAO:
                 if id == venda.get_id():
                     self.listavendas.remove(venda)
                     print("Venda removida com sucesso!")
+                    self.salvar_arquivo()
                     break
                 else:
                     print("Nao tem vendas com este ID")
@@ -265,31 +334,65 @@ class VendaDAO:
         if len(self.listavendas) > 0:
             for venda in self.listavendas:
                 print(venda.ToString())
-            id = input("Digite o ID do venda que vc quer atualizar: ")
+            id = input("Digite o ID da venda que vc quer atualizar: ")
             for venda in self.listavendas:
                 if id == venda.get_id():
-                    # data, carrinho, total
-                    data = input("Digite o data do venda que vc quer atualizar: ")
+                    data = input("Digite a data da venda que vc quer atualizar: ")
                     venda.set_data(data)
+                    
+                    id_cliente = input("Digite o novo ID do cliente: ")
+                    venda.set_idCliente(id_cliente)
+                    
                     carrinho = input("Digite os itens do seu carrinho: ")
                     venda.set_carrinho(carrinho)
-                    total = input("Digite o total do venda a ser atualizada: ")
+                    total = input("Digite o total da venda a ser atualizada: ")
                     venda.set_total(total)
-                else:
-                    print("Nao tem vendas com este ID")
-
+                    self.salvar_arquivo()
+                    print("Venda atualizada com sucesso!")
+                    break
+            else:
+                print("Nao tem vendas com este ID")
         else:
-            print("\nNENHUM VENDA CADASTRADO\n")
+            print("\nNENHUMA VENDA CADASTRADA\n")
 
 class VendaItemDAO:
     def __init__(self):
         self.listavendaItem = []
 
+    def salvar_arquivo(self):
+        dados = []
+        for item in self.listavendaItem:
+            dados.append(
+                {
+                    "id": item.get_id(),
+                    "qtd": item.get_qtd(),
+                    "preco": item.get_preco(),
+                    "idvenda": item.get_idvenda(),
+                    "idproduto": item.get_idproduto(),
+                }
+            )
+
+        with open("venda_itens.json", "w", encoding="utf-8") as arquivo:
+            json.dump(dados, arquivo, ensure_ascii=False, indent=4)
+
+    def carregar_arquivo(self):
+        if not os.path.exists("venda_itens.json"):
+            return
+
+        with open("venda_itens.json", "r", encoding="utf-8") as arquivo:
+            dados = json.load(arquivo)
+
+        self.listavendaItem = []
+        for item in dados:
+            venda_item = VendaItem(item["id"], item["qtd"], item["preco"], item["idvenda"], item["idproduto"])
+            self.listavendaItem.append(venda_item)
+
     def adicionar_venda(self, venda):
-        if isinstance(venda, Venda):
+        if isinstance(venda, VendaItem):
             self.listavendaItem.append(venda)
+            self.salvar_arquivo()
         else:
-            print("NAO EH UMA VENDA VALIDA")
+            print("NAO EH UM ITEM DE VENDA VALIDO")
 
     def mostrar_vendas(self):
         if len(self.listavendaItem) > 0:
@@ -314,6 +417,7 @@ class VendaItemDAO:
             for venda in self.listavendaItem:
                 if id == venda.get_idvenda():
                     self.listavendaItem.remove(venda)
+                    self.salvar_arquivo()
                 else:
                     raise ValueError("Nao tem vendas com este ID")
 
@@ -333,6 +437,7 @@ class VendaItemDAO:
                     venda.set_preco(preco)
                     idproduto = input("Digite o id do produto que vc quer atualizar: ")
                     venda.set_idproduto(idproduto)
+                    self.salvar_arquivo()
         else:
             print("\nNENHUM ITEM VENDA CADASTRADO\n")
 
@@ -340,9 +445,38 @@ class ProdutoDao:
     def __init__(self):
         self.__listaproduto = []
 
-    def atualizar_produto(self, produto):
+    def salvar_arquivo(self):
+        dados = []
+        for produto in self.__listaproduto:
+            dados.append(
+                {
+                    "id": produto.get_id(),
+                    "descricao": produto.get_descricao(),
+                    "preco": produto.get_preco(),
+                    "estoque": produto.get_estoque(),
+                    "idcategoria": produto.get_idcategoria(),
+                }
+            )
+
+        with open("produtos.json", "w", encoding="utf-8") as arquivo:
+            json.dump(dados, arquivo, ensure_ascii=False, indent=4)
+
+    def carregar_arquivo(self):
+        if not os.path.exists("produtos.json"):
+            return
+
+        with open("produtos.json", "r", encoding="utf-8") as arquivo:
+            dados = json.load(arquivo)
+
+        self.__listaproduto = []
+        for item in dados:
+            produto = Produto(item["id"], item["descricao"], item["preco"], item["estoque"], item["idcategoria"])
+            self.__listaproduto.append(produto)
+
+    def adicionar_produto(self, produto):
         if isinstance(produto, Produto):
             self.__listaproduto.append(produto)
+            self.salvar_arquivo()
         else:
             raise ValueError("Não é um produto válido")
         
@@ -370,6 +504,7 @@ class ProdutoDao:
             for produto in self.__listaproduto:
                 if id == produto.get_id():
                     self.__listaproduto.remove(produto)
+                    self.salvar_arquivo()
                     break
                 else:
                     print("Nenhum produto encontrado com esse ID")
@@ -389,6 +524,7 @@ class ProdutoDao:
                     produto.set_estoque(estoque)
                     idcategoria = input("Digite o novo ID da categoria: ")
                     produto.set_idcategoria(idcategoria)
+                    self.salvar_arquivo()
                     break
                 else:
                     print("Nenhum produto encontrado com esse ID")
@@ -399,15 +535,41 @@ class CategoriaDAO:
     def __init__(self):
         self.__listacategoria = []
 
+    def salvar_arquivo(self):
+        dados = []
+        for categoria in self.__listacategoria:
+            dados.append(
+                {
+                    "id": categoria.get_id(),
+                    "categoria": categoria.get_categoria(),
+                }
+            )
+
+        with open("categorias.json", "w", encoding="utf-8") as arquivo:
+            json.dump(dados, arquivo, ensure_ascii=False, indent=4)
+
+    def carregar_arquivo(self):
+        if not os.path.exists("categorias.json"):
+            return
+
+        with open("categorias.json", "r", encoding="utf-8") as arquivo:
+            dados = json.load(arquivo)
+
+        self.__listacategoria = []
+        for item in dados:
+            categoria = Categoria(item["id"], item["categoria"])
+            self.__listacategoria.append(categoria)
+
     def adicionar_categoria(self, categoria):
         if isinstance(categoria, Categoria):
             self.__listacategoria.append(categoria)
+            self.salvar_arquivo()
         else:
             raise ValueError("Não é uma categoria válida")
     
     def mostrar_categoria(self):
         lista = []
-        if len(self.__listaproduto) > 0:
+        if len(self.__listacategoria) > 0:
             for categoria in self.__listacategoria:
                 lista.append(categoria.ToString())
             return lista
@@ -429,6 +591,7 @@ class CategoriaDAO:
             for categoria in self.__listacategoria:
                 if id == categoria.get_id():
                     self.__listacategoria.remove(categoria)
+                    self.salvar_arquivo()
                     break
                 else:
                     print("Nenhuma categoria encontrada com esse ID")
@@ -441,6 +604,7 @@ class CategoriaDAO:
             for categoria in self.__listacategoria:
                 if id == categoria.get_id():
                     categoria.set_categoria(categoria)
+                    self.salvar_arquivo()
                     break
                 else:
                     print("Nenhuma categoria encontrado com esse ID")
@@ -455,6 +619,22 @@ class UI:
         self.vendaitem_dao = VendaItemDAO()
         self.produto_dao = ProdutoDao()
         self.categoria_dao = CategoriaDAO()
+        self.carregar_todos_arquivos()
+        self.salvar_todos_arquivos()
+
+    def carregar_todos_arquivos(self):
+        self.cliente_dao.carregar_arquivo()
+        self.venda_dao.carregar_arquivo()
+        self.vendaitem_dao.carregar_arquivo()
+        self.produto_dao.carregar_arquivo()
+        self.categoria_dao.carregar_arquivo()
+
+    def salvar_todos_arquivos(self):
+        self.cliente_dao.salvar_arquivo()
+        self.venda_dao.salvar_arquivo()
+        self.vendaitem_dao.salvar_arquivo()
+        self.produto_dao.salvar_arquivo()
+        self.categoria_dao.salvar_arquivo()
 
     def menu(self):
         print("----------------------------")
@@ -511,17 +691,101 @@ class UI:
         while True:
             opcao = self.menu()
             if opcao == '1':
-                self.menu_cliente()
+                self.executar_menu_cliente()
             elif opcao == '2':
-                self.menu_venda()
+                self.executar_menu_venda()
             elif opcao == '3':
-                self.menu_vendaitem()
+                self.executar_menu_vendaitem()
             elif opcao == '4':
-                self.menu_produto()
+                self.executar_menu_produto()
             elif opcao == '5':
-                self.menu_categoria()
+                self.executar_menu_categoria()
             elif opcao == '6':
+                self.salvar_todos_arquivos()
+                print("Encerrando sistema...")
                 break
+            else:
+                print("Opção inválida.")
+
+    def executar_menu_cliente(self):
+        while True:
+            opcao = self.menu_cliente()
+            if opcao == '1':
+                self.criar_cliente()
+            elif opcao == '2':
+                self.mostrar_cliente()
+            elif opcao == '3':
+                self.atualizar_cliente()
+            elif opcao == '4':
+                self.excluir_cliente()
+            elif opcao == '5':
+                break
+            else:
+                print("Opção inválida.")
+
+    def executar_menu_venda(self):
+        while True:
+            opcao = self.menu_venda()
+            if opcao == '1':
+                self.criar_venda()
+            elif opcao == '2':
+                self.mostrar_vendas()
+            elif opcao == '3':
+                self.venda_dao.atualizar_venda()
+            elif opcao == '4':
+                self.venda_dao.excluir_venda()
+            elif opcao == '5':
+                break
+            else:
+                print("Opção inválida.")
+
+    def executar_menu_vendaitem(self):
+        while True:
+            opcao = self.menu_vendaitem()
+            if opcao == '1':
+                self.criar_item_venda()
+            elif opcao == '2':
+                self.mostrar_itens_venda()
+            elif opcao == '3':
+                self.vendaitem_dao.atualizar_venda()
+            elif opcao == '4':
+                self.vendaitem_dao.excluir_venda()
+            elif opcao == '5':
+                break
+            else:
+                print("Opção inválida.")
+
+    def executar_menu_produto(self):
+        while True:
+            opcao = self.menu_produto()
+            if opcao == '1':
+                self.criar_produto()
+            elif opcao == '2':
+                self.mostrar_produtos()
+            elif opcao == '3':
+                self.produto_dao.atualizar_produto()
+            elif opcao == '4':
+                self.produto_dao.excluir_produto()
+            elif opcao == '5':
+                break
+            else:
+                print("Opção inválida.")
+
+    def executar_menu_categoria(self):
+        while True:
+            opcao = self.menu_categoria()
+            if opcao == '1':
+                self.criar_categoria()
+            elif opcao == '2':
+                self.mostrar_categorias()
+            elif opcao == '3':
+                self.categoria_dao.atualizar_categoria()
+            elif opcao == '4':
+                self.categoria_dao.excluir_categoria()
+            elif opcao == '5':
+                break
+            else:
+                print("Opção inválida.")
 
     def criar_cliente(self):
         id = input("Digite um ID pro cliente: ")
@@ -533,7 +797,13 @@ class UI:
         self.cliente_dao.adicionar_clientes(cliente)
 
     def mostrar_cliente(self):
-        self.cliente_dao.mostrar_clientes()
+        clientes = self.cliente_dao.mostrar_clientes()
+        if len(clientes) == 0:
+            print("Nenhum cliente cadastrado.")
+            return
+
+        for cliente in clientes:
+            print(cliente.ToString())
 
     def mostrar_clienteID(self):
         self.cliente_dao.mostrar_clientesID()
@@ -543,6 +813,78 @@ class UI:
 
     def excluir_cliente(self):
         self.cliente_dao.excluir_cliente()
+
+    def criar_venda(self):
+        id = input("Digite um ID pra venda: ")
+        id_cliente = input("Digite o ID do cliente que está fazendo a compra: ")
+        data = input("Digite a data da venda (dd/mm/aaaa): ")
+        carrinho = input("Digite os itens do carrinho: ")
+        total = input("Digite o total da venda: ")
+
+        venda = Venda(id, data, carrinho, total, id_cliente)
+        self.venda_dao.adicionar_venda(venda)
+        print("Venda cadastrada com sucesso!")
+
+    def mostrar_vendas(self):
+        vendas = self.venda_dao.mostrar_vendas()
+        if isinstance(vendas, str):
+            print(vendas)
+            return
+
+        for venda in vendas:
+            print(venda.ToString())
+
+    def criar_item_venda(self):
+        id = input("Digite um ID pro item da venda: ")
+        qtd = input("Digite a quantidade: ")
+        preco = input("Digite o preço: ")
+        idvenda = input("Digite o ID da venda: ")
+        idproduto = input("Digite o ID do produto: ")
+
+        item = VendaItem(id, qtd, preco, idvenda, idproduto)
+        self.vendaitem_dao.adicionar_venda(item)
+
+    def mostrar_itens_venda(self):
+        itens = self.vendaitem_dao.mostrar_vendas()
+        if isinstance(itens, str):
+            print(itens)
+            return
+
+        for item in itens:
+            print(item.ToString())
+
+    def criar_produto(self):
+        id = input("Digite um ID pro produto: ")
+        descricao = input("Digite a descrição do produto: ")
+        preco = input("Digite o preço do produto: ")
+        estoque = input("Digite o estoque do produto: ")
+        idcategoria = input("Digite o ID da categoria: ")
+
+        produto = Produto(id, descricao, preco, estoque, idcategoria)
+        self.produto_dao.adicionar_produto(produto)
+
+    def mostrar_produtos(self):
+        try:
+            produtos = self.produto_dao.mostrar_produtos()
+            for produto in produtos:
+                print(produto)
+        except ValueError as erro:
+            print(erro)
+
+    def criar_categoria(self):
+        id = input("Digite um ID pra categoria: ")
+        nome_categoria = input("Digite o nome da categoria: ")
+
+        categoria = Categoria(id, nome_categoria)
+        self.categoria_dao.adicionar_categoria(categoria)
+
+    def mostrar_categorias(self):
+        try:
+            categorias = self.categoria_dao.mostrar_categoria()
+            for categoria in categorias:
+                print(categoria)
+        except ValueError as erro:
+            print(erro)
 
 if __name__ == "__main__":
     UI().main()
