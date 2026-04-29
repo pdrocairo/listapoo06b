@@ -1,0 +1,16 @@
+[
+    {
+        "_VendaItem__id": 1,
+        "_VendaItem__qtd": 5,
+        "_VendaItem__preco": 2.5,
+        "_VendaItem__idvenda": 2,
+        "_VendaItem__idproduto": 1
+    },
+    {
+        "_VendaItem__id": 2,
+        "_VendaItem__qtd": 1,
+        "_VendaItem__preco": 2.5,
+        "_VendaItem__idvenda": 2,
+        "_VendaItem__idproduto": 1
+    }
+]

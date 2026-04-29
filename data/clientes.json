@@ -1,0 +1,8 @@
+[
+    {
+        "_Cliente__id": 1,
+        "_Cliente__nome": "Pedro Cairo",
+        "_Cliente__email": "cairo@mail.com",
+        "_Cliente__fone": "123-321"
+    }
+]

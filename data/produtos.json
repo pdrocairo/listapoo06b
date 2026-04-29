@@ -1,0 +1,9 @@
+[
+    {
+        "_Produto__id": 1,
+        "_Produto__descricao": "DETERGENTE",
+        "_Produto__preco": 2.5,
+        "_Produto__estoque": 100,
+        "_Produto__idcategoria": 1
+    }
+]

@@ -1,0 +1,16 @@
+[
+    {
+        "_Venda__id": 1,
+        "_Venda__data": "28/04/2026",
+        "_Venda__carrinho": false,
+        "_Venda__total": 0,
+        "_Venda__idCliente": 1
+    },
+    {
+        "_Venda__id": 2,
+        "_Venda__data": "28/04/2026",
+        "_Venda__carrinho": false,
+        "_Venda__total": 15.0,
+        "_Venda__idCliente": 1
+    }
+]
